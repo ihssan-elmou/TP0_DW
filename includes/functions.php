@@ -1,5 +1,28 @@
 <?php
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+/* =========================================================
+   CONFIGURATION SMTP
+   À adapter selon ton fournisseur (Gmail, Outlook, Mailtrap...).
+   Pour Gmail : active la validation en 2 étapes puis génère un
+   "mot de passe d'application" (16 caractères) — pas ton vrai mot de passe.
+   ========================================================= */
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_USER', 'douaeelmoudni235@gmail.com');
+define('SMTP_PASS', 'jxsz cdxd sdks toge');
+define('SMTP_PORT', 587);
+define('SMTP_FROM', 'douaeelmoudni235@gmail.com');
+define('SMTP_FROM_NAME', 'TP0 - Gestion des emails');
+
+
+/* =========================================================
+   PARTIE 1
+   ========================================================= */
+
 function filtrerEmailsValides($fichierEntree, $fichierInvalides) {
     $lignes = file($fichierEntree, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $valides = [];
@@ -44,4 +67,95 @@ function separerParDomaine($emails, $dossierSortie) {
     return $parDomaine;
 }
 
-?>
+
+/* =========================================================
+   PARTIE 2 : fonctions pour l'interface web
+   ========================================================= */
+
+/**
+ * Liste les fichiers texte présents dans un dossier donné
+ * (utilisé pour afficher les fichiers générés à télécharger/envoyer).
+ */
+function listerFichiersGeneres($dossier) {
+    $fichiers = [];
+    if (!is_dir($dossier)) {
+        return $fichiers;
+    }
+    foreach (scandir($dossier) as $f) {
+        if ($f === '.' || $f === '..') continue;
+        if (is_file("$dossier/$f") && str_ends_with($f, '.txt')) {
+            $fichiers[] = $f;
+        }
+    }
+    sort($fichiers);
+    return $fichiers;
+}
+
+/**
+ * Lit une liste d'adresses email valides depuis un fichier (une par ligne).
+ */
+function lireAdressesValides($fichier) {
+    if (!file_exists($fichier)) {
+        return [];
+    }
+    return file($fichier, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+}
+
+/**
+ * Envoie un email (avec pièces jointes optionnelles) à un ou plusieurs destinataires,
+ * via PHPMailer + SMTP.
+ *
+ * @param array  $destinataires  liste d'adresses email
+ * @param string $objet          objet du message
+ * @param string $contenu        corps du message (texte brut)
+ * @param array  $piecesJointes  chemins des fichiers à joindre (facultatif)
+ * @return bool  true si l'envoi a réussi pour TOUS les destinataires
+ */
+function envoyerEmail($destinataires, $objet, $contenu, $piecesJointes = []) {
+    $succes = true;
+
+    foreach ((array) $destinataires as $dest) {
+        $dest = trim($dest);
+        if ($dest === '' || !filter_var($dest, FILTER_VALIDATE_EMAIL)) {
+            $succes = false;
+            continue;
+        }
+
+        $mail = new PHPMailer(true);
+
+        try {
+            // Configuration serveur SMTP
+            $mail->isSMTP();
+            $mail->Host       = SMTP_HOST;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = SMTP_USER;
+            $mail->Password   = SMTP_PASS;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = SMTP_PORT;
+            $mail->CharSet    = 'UTF-8';
+
+            // Expéditeur / destinataire
+            $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+            $mail->addAddress($dest);
+
+            // Pièces jointes
+            foreach ($piecesJointes as $chemin) {
+                if (file_exists($chemin)) {
+                    $mail->addAttachment($chemin);
+                }
+            }
+
+            // Contenu
+            $mail->isHTML(false);
+            $mail->Subject = $objet;
+            $mail->Body    = $contenu;
+
+            $mail->send();
+        } catch (Exception $e) {
+            $succes = false;
+            error_log("Échec de l'envoi à $dest : " . $mail->ErrorInfo);
+        }
+    }
+
+    return $succes;
+}
