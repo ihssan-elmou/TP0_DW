@@ -159,3 +159,34 @@ function envoyerEmail($destinataires, $objet, $contenu, $piecesJointes = []) {
 
     return $succes;
 }
+/**
+ * Vérifie si une adresse existe déjà dans le fichier (insensible à la casse)
+ */
+function adresseExisteDeja($email, $fichier) {
+    if (!file_exists($fichier)) {
+        return false;
+    }
+    $adresses = file($fichier, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $email = strtolower(trim($email));
+
+    foreach ($adresses as $a) {
+        if (strtolower(trim($a)) === $email) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Ajoute une adresse au fichier, puis retrie le fichier entier
+ */
+function ajouterAdresse($email, $fichier) {
+    $adresses = file_exists($fichier)
+        ? file($fichier, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)
+        : [];
+
+    $adresses[] = trim($email);
+    sort($adresses, SORT_STRING | SORT_FLAG_CASE);
+
+    file_put_contents($fichier, implode(PHP_EOL, $adresses));
+}

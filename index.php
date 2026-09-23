@@ -2,7 +2,7 @@
 session_start();
 require_once 'includes/functions.php';
 
-$dossierFiles     = 'files';
+$dossierFiles     = 'files'; 
 $dossierGenerated = 'generated';
 $fichierEntree    = "$dossierFiles/Emails.txt";
 $fichierInvalides = "$dossierGenerated/Emailinvalide.txt";
@@ -102,6 +102,26 @@ if ($action === 'envoyer_message') {
 }
 
 /* -----------------------------------------------------------
+   4. Ajout d'une nouvelle adresse email
+   ----------------------------------------------------------- */
+if ($action === 'ajouter_adresse') {
+    $nouvelleAdresse = trim($_POST['nouvelleAdresse'] ?? '');
+
+    if (!filter_var($nouvelleAdresse, FILTER_VALIDATE_EMAIL)) {
+        $messages[] = ['type' => 'erreur', 'texte' => "Format d'adresse invalide."];
+    } elseif (adresseExisteDeja($nouvelleAdresse, $fichierTrie)) {
+        $messages[] = ['type' => 'erreur', 'texte' => "Cette adresse existe déjà."];
+    } else {
+        ajouterAdresse($nouvelleAdresse, $fichierTrie);
+        $messages[] = ['type' => 'succes', 'texte' => "Adresse « $nouvelleAdresse » ajoutée."];
+    }
+}
+
+/* -----------------------------------------------------------
+   Données pour l'affichage
+   ----------------------------------------------------------- */
+
+/* -----------------------------------------------------------
    Données pour l'affichage
    ----------------------------------------------------------- */
 $fichiersGeneres = listerFichiersGeneres($dossierGenerated);
@@ -112,23 +132,7 @@ $adressesValides = lireAdressesValides($fichierTrie);
 <head>
 <meta charset="UTF-8">
 <title>TP0 - Gestion des adresses email</title>
-<style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; color: #222; padding: 0 15px; }
-    h1 { font-size: 1.5rem; border-bottom: 2px solid #333; padding-bottom: 8px; }
-    section { background: #f7f7f9; border: 1px solid #ddd; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
-    h2 { font-size: 1.15rem; margin-top: 0; }
-    .message { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; }
-    .message.succes { background: #d9f2e3; color: #1a5c3a; border: 1px solid #9edcb8; }
-    .message.erreur { background: #fbe2e2; color: #7d1f1f; border: 1px solid #f3b3b3; }
-    ul.fichiers { list-style: none; padding: 0; }
-    ul.fichiers li { padding: 4px 0; border-bottom: 1px dashed #ddd; }
-    .liste-adresses { max-height: 160px; overflow-y: auto; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
-    label { display: block; margin: 4px 0; }
-    input[type=text], input[type=email], textarea { width: 100%; padding: 6px 8px; box-sizing: border-box; margin-top: 4px; }
-    button { margin-top: 10px; padding: 8px 16px; border: none; border-radius: 5px; background: #2d6cdf; color: #fff; cursor: pointer; }
-    button:hover { background: #1f52ad; }
-    .fichier-nom { font-weight: 600; }
-</style>
+   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -203,6 +207,34 @@ $adressesValides = lireAdressesValides($fichierTrie);
     </form>
 </section>
 <?php endif; ?>
+
+<!-- 4. Ajouter une nouvelle adresse -->
+<section>
+    <h2>4. Ajouter une adresse email</h2>
+    <form method="post" id="formAjout" novalidate>
+        <label for="nouvelleAdresse">Adresse email :</label>
+        <input type="email" id="nouvelleAdresse" name="nouvelleAdresse" placeholder="exemple@domaine.com" required>
+        <p id="erreurClient" class="message erreur" style="display:none;"></p>
+        <input type="hidden" name="action" value="ajouter_adresse">
+        <button type="submit">Ajouter l'adresse</button>
+    </form>
+</section>
+
+<script>
+document.getElementById('formAjout').addEventListener('submit', function (e) {
+    const champEmail = document.getElementById('nouvelleAdresse');
+    const erreurBox = document.getElementById('erreurClient');
+    const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+    if (!regex.test(champEmail.value.trim())) {
+        e.preventDefault();
+        erreurBox.textContent = "Format d'adresse email invalide.";
+        erreurBox.style.display = 'block';
+    } else {
+        erreurBox.style.display = 'none';
+    }
+});
+</script>
 
 </body>
 </html>

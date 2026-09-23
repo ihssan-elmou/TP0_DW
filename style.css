@@ -1,0 +1,275 @@
+/* ============================================================
+   style.css — 
+   ============================================================ */
+
+:root {
+    --rouge: #e5322d;
+    --rouge-fonce: #c2201c;
+    --rouge-clair: #fdeceb;
+    --texte: #2b2b2b;
+    --texte-doux: #6b6b6b;
+    --fond: #f5f6f8;
+    --blanc: #ffffff;
+    --bordure: #e7e7ea;
+    --vert: #1a9e6b;
+    --vert-fond: #e5f8ef;
+    --radius: 14px;
+    --ombre: 0 2px 10px rgba(20, 20, 30, 0.06);
+    --ombre-hover: 0 8px 24px rgba(20, 20, 30, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--fond);
+    color: var(--texte);
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 20px 60px;
+    line-height: 1.5;
+}
+
+h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--texte);
+    border-bottom: none;
+    margin-bottom: 36px;
+    letter-spacing: -0.01em;
+}
+
+h1::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 4px;
+    background: var(--rouge);
+    border-radius: 4px;
+    margin: 14px auto 0;
+}
+
+h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--texte);
+    margin: 0 0 16px;
+}
+
+h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--texte-doux);
+    text-transform: none;
+    margin: 0 0 8px;
+}
+
+/* ---------- Cartes / sections ---------- */
+
+section {
+    background: var(--blanc);
+    border: 1px solid var(--bordure);
+    border-radius: var(--radius);
+    box-shadow: var(--ombre);
+    padding: 24px 26px;
+    margin-bottom: 24px;
+    transition: box-shadow 0.2s ease;
+}
+
+section:hover {
+    box-shadow: var(--ombre-hover);
+}
+
+/* ---------- Messages de statut ---------- */
+
+.message {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: none;
+}
+
+.message.succes {
+    background: var(--vert-fond);
+    color: var(--vert);
+}
+
+.message.erreur {
+    background: var(--rouge-clair);
+    color: var(--rouge-fonce);
+}
+
+/* ---------- Zone d'upload façon iLovePDF ---------- */
+
+input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: 28px 16px;
+    background: var(--rouge-clair);
+    border: 2px dashed #f2b3b0;
+    border-radius: var(--radius);
+    color: var(--rouge-fonce);
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+input[type="file"]:hover {
+    background: #fbdad8;
+    border-color: var(--rouge);
+}
+
+/* ---------- Champs texte ---------- */
+
+input[type="text"],
+input[type="email"],
+textarea {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 6px;
+    border: 1.5px solid var(--bordure);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--texte);
+    background: var(--blanc);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--rouge);
+    box-shadow: 0 0 0 3px var(--rouge-clair);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--texte-doux);
+    margin: 14px 0 4px;
+}
+
+/* ---------- Bouton principal, façon iLovePDF ---------- */
+
+button {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    padding: 13px 20px;
+    border: none;
+    border-radius: 30px;
+    background: var(--rouge);
+    color: var(--blanc);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(229, 50, 45, 0.35);
+    transition: background 0.18s ease, transform 0.12s ease;
+}
+
+button:hover {
+    background: var(--rouge-fonce);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* ---------- Liste des fichiers générés ---------- */
+
+ul.fichiers {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px;
+}
+
+ul.fichiers li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: var(--fond);
+    border: 1px solid var(--bordure);
+    border-radius: 10px;
+}
+
+ul.fichiers li label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 500;
+    color: var(--texte);
+    cursor: pointer;
+}
+
+.fichier-nom {
+    font-weight: 600;
+}
+
+ul.fichiers li a {
+    color: var(--rouge);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+ul.fichiers li a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Liste d'adresses (destinataires) ---------- */
+
+.liste-adresses {
+    max-height: 170px;
+    overflow-y: auto;
+    background: var(--fond);
+    border: 1px solid var(--bordure);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+}
+
+.liste-adresses label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--texte);
+    margin: 6px 0;
+    cursor: pointer;
+}
+
+/* ---------- Cases à cocher ---------- */
+
+input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--rouge);
+    cursor: pointer;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 600px) {
+    body { margin: 20px auto; padding: 0 14px 40px; }
+    section { padding: 18px; }
+    h1 { font-size: 1.5rem; }
+}
