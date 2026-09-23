@@ -101,25 +101,59 @@ if ($action === 'envoyer_message') {
     }
 }
 
+
 /* -----------------------------------------------------------
    4. Ajout d'une nouvelle adresse email
    ----------------------------------------------------------- */
 if ($action === 'ajouter_adresse') {
+
     $nouvelleAdresse = trim($_POST['nouvelleAdresse'] ?? '');
 
+    // 1. Syntaxe
     if (!filter_var($nouvelleAdresse, FILTER_VALIDATE_EMAIL)) {
-        $messages[] = ['type' => 'erreur', 'texte' => "Format d'adresse invalide."];
+
+        $messages[] = [
+            'type' => 'erreur',
+            'texte' => "Format d'adresse invalide."
+        ];
+
+    // 2. Doublon
     } elseif (adresseExisteDeja($nouvelleAdresse, $fichierTrie)) {
-        $messages[] = ['type' => 'erreur', 'texte' => "Cette adresse existe déjà."];
+
+        $messages[] = [
+            'type' => 'erreur',
+            'texte' => "Cette adresse existe déjà."
+        ];
+
+    // 3. Domaine
+    } elseif (!domaineExiste($nouvelleAdresse)) {
+
+        $messages[] = [
+            'type' => 'erreur',
+            'texte' => "Le domaine de cette adresse n'existe pas."
+        ];
+
+    // 4. Serveur MX
+    } elseif (!domainePossedeMX($nouvelleAdresse)) {
+
+        $messages[] = [
+            'type' => 'erreur',
+            'texte' => "Le domaine ne possède pas de serveur de messagerie MX."
+        ];
+
+        // 5. Ajout
     } else {
-        ajouterAdresse($nouvelleAdresse, $fichierTrie);
-        $messages[] = ['type' => 'succes', 'texte' => "Adresse « $nouvelleAdresse » ajoutée."];
+
+        ajouterAuxFichiersCorrespondants($nouvelleAdresse, $fichierTrie, $dossierGenerated);
+
+        $messages[] = [
+            'type' => 'succes',
+            'texte' => "Adresse « $nouvelleAdresse » ajoutée avec succès."
+        ];
     }
 }
 
-/* -----------------------------------------------------------
-   Données pour l'affichage
-   ----------------------------------------------------------- */
+
 
 /* -----------------------------------------------------------
    Données pour l'affichage

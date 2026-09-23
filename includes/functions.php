@@ -190,3 +190,36 @@ function ajouterAdresse($email, $fichier) {
 
     file_put_contents($fichier, implode(PHP_EOL, $adresses));
 }
+
+function domaineExiste($email) {
+
+    $domaine = substr(strrchr($email, "@"), 1);
+
+    return checkdnsrr($domaine, "A") ||
+           checkdnsrr($domaine, "AAAA") ||
+           checkdnsrr($domaine, "MX");
+}
+
+
+function domainePossedeMX($email) {
+
+    $domaine = substr(strrchr($email, "@"), 1);
+
+    return checkdnsrr($domaine, "MX");
+}
+
+/**
+ * Ajoute une adresse à EmailsT.txt et régénère les fichiers de domaine,
+ * en réutilisant les fonctions de la Partie 1. Emails.txt (source) n'est pas modifié.
+ */
+function ajouterAuxFichiersCorrespondants($email, $fichierTrie, $dossierGenerated) {
+    $listeActuelle = file_exists($fichierTrie)
+        ? file($fichierTrie, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)
+        : [];
+
+    $listeActuelle[] = trim($email);
+
+    $sansDoublons = supprimerDoublons($listeActuelle);
+    $trie         = trierEtSauvegarder($sansDoublons, $fichierTrie);
+    separerParDomaine($trie, $dossierGenerated);
+}
