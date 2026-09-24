@@ -22,7 +22,6 @@ if ($action === 'uploader') {
 
         move_uploaded_file($_FILES['fichierEmails']['tmp_name'], $fichierEntree);
 
-        // On repart d'un dossier "generated" propre à chaque nouveau traitement
         foreach (glob("$dossierGenerated/*.txt") as $f) {
             unlink($f);
         }
@@ -57,7 +56,7 @@ if ($action === 'envoyer_fichiers') {
         $messages[] = ['type' => 'erreur', 'texte' => "Veuillez sélectionner au moins un fichier à envoyer."];
     } else {
         $chemins = array_map(
-            fn($f) => "$dossierGenerated/" . basename($f), // basename() évite toute injection de chemin
+            fn($f) => "$dossierGenerated/" . basename($f),
             $fichiersChoisis
         );
         $ok = envoyerEmail(
@@ -101,7 +100,6 @@ if ($action === 'envoyer_message') {
     }
 }
 
-
 /* -----------------------------------------------------------
    4. Ajout d'une nouvelle adresse email
    ----------------------------------------------------------- */
@@ -109,51 +107,23 @@ if ($action === 'ajouter_adresse') {
 
     $nouvelleAdresse = trim($_POST['nouvelleAdresse'] ?? '');
 
-    // 1. Syntaxe
     if (!filter_var($nouvelleAdresse, FILTER_VALIDATE_EMAIL)) {
+        $messages[] = ['type' => 'erreur', 'texte' => "Format d'adresse invalide."];
 
-        $messages[] = [
-            'type' => 'erreur',
-            'texte' => "Format d'adresse invalide."
-        ];
-
-    // 2. Doublon
     } elseif (adresseExisteDeja($nouvelleAdresse, $fichierTrie)) {
+        $messages[] = ['type' => 'erreur', 'texte' => "Cette adresse existe déjà."];
 
-        $messages[] = [
-            'type' => 'erreur',
-            'texte' => "Cette adresse existe déjà."
-        ];
-
-    // 3. Domaine
     } elseif (!domaineExiste($nouvelleAdresse)) {
+        $messages[] = ['type' => 'erreur', 'texte' => "Le domaine de cette adresse n'existe pas."];
 
-        $messages[] = [
-            'type' => 'erreur',
-            'texte' => "Le domaine de cette adresse n'existe pas."
-        ];
-
-    // 4. Serveur MX
     } elseif (!domainePossedeMX($nouvelleAdresse)) {
+        $messages[] = ['type' => 'erreur', 'texte' => "Le domaine ne possède pas de serveur de messagerie MX."];
 
-        $messages[] = [
-            'type' => 'erreur',
-            'texte' => "Le domaine ne possède pas de serveur de messagerie MX."
-        ];
-
-        // 5. Ajout
     } else {
-
         ajouterAuxFichiersCorrespondants($nouvelleAdresse, $fichierTrie, $dossierGenerated);
-
-        $messages[] = [
-            'type' => 'succes',
-            'texte' => "Adresse « $nouvelleAdresse » ajoutée avec succès."
-        ];
+        $messages[] = ['type' => 'succes', 'texte' => "Adresse « $nouvelleAdresse » ajoutée avec succès."];
     }
 }
-
-
 
 /* -----------------------------------------------------------
    Données pour l'affichage
@@ -165,31 +135,49 @@ $adressesValides = lireAdressesValides($fichierTrie);
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TP0 - Gestion des adresses email</title>
-   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Application de gestion des adresses email</h1>
+<header class="entete">
+    <a href="index.php" class="logo"><strong>📧 Email</strong></a>
+    <nav>
+        <a href="#accueil">Traiter un fichier</a>
+        <a href="#fichiers">Fichiers générés</a>
+        <a href="#ajouter">Ajouter une adresse</a>
+    </nav>
+    <a href="#ajouter" class="bouton-nav">Ajouter</a>
+</header>
+
+
+
+<h1>Gestion des adresses email</h1>
+<p class="sous-titre">Nettoie, trie et envoie tes listes d'emails en quelques clics.</p>
 
 <?php foreach ($messages as $m): ?>
     <div class="message <?= htmlspecialchars($m['type']) ?>"><?= htmlspecialchars($m['texte']) ?></div>
 <?php endforeach; ?>
 
 <!-- 1. Téléchargement du fichier + lancement du traitement -->
-<section>
-    <h2>1. Télécharger le fichier des emails à traiter</h2>
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="fichierEmails" accept=".txt" required>
+<section id="accueil">
+    <h2>Télécharger le fichier des emails à traiter</h2>
+    <form method="post" enctype="multipart/form-data" class="zone-upload">
+        <label for="fichierEmails" class="bouton-upload">
+            <span id="nomFichier">Sélectionner un fichier </span>
+        </label>
+        <input type="file" id="fichierEmails" name="fichierEmails" accept=".txt" required>
+        <p class="texte-alternatif">ou dépose ton fichier ici</p>
         <input type="hidden" name="action" value="uploader">
         <button type="submit">Lancer le traitement</button>
     </form>
 </section>
 
 <!-- 2. Fichiers générés : téléchargement + envoi -->
-<?php if (!empty($fichiersGeneres)): ?>
-<section>
-    <h2>2. Fichiers générés</h2>
+<section id="fichiers">
+    <h2>Fichiers générés</h2>
+    <?php if (!empty($fichiersGeneres)): ?>
     <form method="post">
         <ul class="fichiers">
         <?php foreach ($fichiersGeneres as $f): ?>
@@ -208,13 +196,15 @@ $adressesValides = lireAdressesValides($fichierTrie);
         </label>
         <button type="submit">Envoyer les fichiers sélectionnés</button>
     </form>
+    <?php else: ?>
+    <p class="etat-vide">Aucun fichier généré pour l'instant — commence par uploader un fichier ci-dessus.</p>
+    <?php endif; ?>
 </section>
-<?php endif; ?>
 
 <!-- 3. Envoi d'un message aux adresses sélectionnées -->
 <?php if (!empty($adressesValides)): ?>
 <section>
-    <h2>3. Envoyer un message</h2>
+    <h2>Envoyer un message</h2>
     <form method="post" enctype="multipart/form-data">
         <h3 style="margin-bottom:4px;">Destinataires</h3>
         <div class="liste-adresses">
@@ -243,8 +233,8 @@ $adressesValides = lireAdressesValides($fichierTrie);
 <?php endif; ?>
 
 <!-- 4. Ajouter une nouvelle adresse -->
-<section>
-    <h2>4. Ajouter une adresse email</h2>
+<section id="ajouter">
+    <h2>Ajouter une adresse email</h2>
     <form method="post" id="formAjout" novalidate>
         <label for="nouvelleAdresse">Adresse email :</label>
         <input type="email" id="nouvelleAdresse" name="nouvelleAdresse" placeholder="exemple@domaine.com" required>
@@ -253,6 +243,10 @@ $adressesValides = lireAdressesValides($fichierTrie);
         <button type="submit">Ajouter l'adresse</button>
     </form>
 </section>
+
+<footer class="pied-page">
+    <p>TP0 – ENSA Tétouan · Gestion des adresses email</p>
+</footer>
 
 <script>
 document.getElementById('formAjout').addEventListener('submit', function (e) {
@@ -267,6 +261,13 @@ document.getElementById('formAjout').addEventListener('submit', function (e) {
     } else {
         erreurBox.style.display = 'none';
     }
+});
+</script>
+
+<script>
+document.getElementById('fichierEmails').addEventListener('change', function () {
+    const nomSpan = document.getElementById('nomFichier');
+    nomSpan.textContent = this.files.length ? this.files[0].name : "Sélectionner un fichier ";
 });
 </script>
 

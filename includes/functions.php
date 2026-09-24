@@ -7,9 +7,6 @@ use PHPMailer\PHPMailer\Exception;
 
 /* =========================================================
    CONFIGURATION SMTP
-   À adapter selon ton fournisseur (Gmail, Outlook, Mailtrap...).
-   Pour Gmail : active la validation en 2 étapes puis génère un
-   "mot de passe d'application" (16 caractères) — pas ton vrai mot de passe.
    ========================================================= */
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_USER', 'douaeelmoudni235@gmail.com');
@@ -196,8 +193,7 @@ function domaineExiste($email) {
     $domaine = substr(strrchr($email, "@"), 1);
 
     return checkdnsrr($domaine, "A") ||
-           checkdnsrr($domaine, "AAAA") ||
-           checkdnsrr($domaine, "MX");
+           checkdnsrr($domaine, "AAAA") ;
 }
 
 
@@ -223,3 +219,6 @@ function ajouterAuxFichiersCorrespondants($email, $fichierTrie, $dossierGenerate
     $trie         = trierEtSauvegarder($sansDoublons, $fichierTrie);
     separerParDomaine($trie, $dossierGenerated);
 }
+
+
+
